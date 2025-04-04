@@ -22,3 +22,13 @@ void WifiClient::connect() {
   Serial.println(ip);
 }
 
+int WifiClient::check_connection(){   // New function that checks connection! 
+ 
+   if( WiFi.status() != WL_CONNECTED ){ 
+       return 0; 
+   } 
+   else{ 
+       return 1; 
+   } 
+ 
+} 
