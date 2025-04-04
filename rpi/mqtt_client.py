@@ -6,12 +6,14 @@ def on_connect(client, userdata, flags, rc):
     logging.info("MQTT - connected to broker, code " + str(rc))
 
 def on_message(client, userdata, msg):
-    global message
-    message = msg
+    # global message
+    # message = msg
     topic = msg.topic
     payload = str(msg.payload.decode("utf-8"))
     logging.debug("MQTT - msg received [" + topic + "]: " + payload)
-
+    userdata["message"] = msg
+    userdata["topic"] = topic
+ 
 def on_subscribe(client, userdata, mid, granted_qos):
     logging.info("MQTT - subscribed: " + str(mid) + " " + str(granted_qos))
 
@@ -21,11 +23,12 @@ def on_publish(client, userdata, mid):
 def on_log(client, userdata, level, string):
     logging.debug(string)
 
-def connect(ip, port=1883, ca_path=None, cert_path=None, key_path=None):
-    mqttc = mqtt.Client()
+def connect(ip, port=1883, ca_path=None, cert_path=None, key_path=None, userdata=None):
+    mqttc = mqtt.Client(userdata=userdata)
 
     if ca_path and cert_path and key_path:
-        # Allowing the required credentials only if it's provided
+
+        # Allowing the required credentials
         mqttc.tls_set(ca_certs=ca_path,
             certfile=cert_path,
             keyfile=key_path,
@@ -49,7 +52,7 @@ if __name__ == "__main__":
         format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
         level=logging.DEBUG,
     )
-    mqtt_broker_ip = <RPI IP>
+    mqtt_broker_ip = <RPI_ID>
     mqtt_broker_port = 1883
     mqtt_topic = "testMQTT"
     
