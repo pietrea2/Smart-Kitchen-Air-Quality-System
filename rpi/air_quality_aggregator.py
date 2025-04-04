@@ -6,21 +6,22 @@ ip_mosquitto = "192.168.2.214"
 topic_mosquitto = "tester_topic"
 
 # Connect to Mosquitto and subscribe to topics
-mqtt_client.message = None
-mqttc = mqtt_client.connect(ip_mosquitto)
+# mqtt_client.message = None
+rpi_mqtt_data = {"message": None, "topic": None}
+mqttc = mqtt_client.connect(ip=ip_mosquitto, userdata=rpi_mqtt_data)
 mqttc.subscribe(topic_mosquitto)
 
 # Connecting to AWS
-mqtt_client.message = None
+# mqtt_client.message = None
 mqtt_broker_ip ="ao79tyrzu68h1-ats.iot.us-east-1.amazonaws.com"
 mqtt_broker_port = 8883
 mqtt_topic = "airquality/sensors"
 ca_cert = "AmazonRootCA1.pem"
-cert_file = < FILE NAME ENDING IN CERTIFICATE PEM CRT>
-key_file = <FILE NAME ENDING WITH PRIVATE PEM CRT>
-
-mqtt_aws_client = mqtt_client.connect(mqtt_broker_ip, mqtt_broker_port, ca_cert, cert_file, key_file)
-
+cert_file = "b1df023b51d2eba8c079bf93c81faae7904df8fc642b7e8660cf12da8a0f6213-certificate.pem.crt"
+key_file = "b1df023b51d2eba8c079bf93c81faae7904df8fc642b7e8660cf12da8a0f6213-private.pem.key"
+aws_mqtt = {"message": None, "topic": None}
+mqtt_aws_client = mqtt_client.connect(mqtt_broker_ip, mqtt_broker_port, ca_cert, cert_file, key_file, aws_mqtt)
+mqtt_aws_client.subscribe("fan_signal")
 ENTRY_LIMIT = 10
 
 metrics_to_calculate = ["CH4", "CO", "LPG"]
@@ -54,10 +55,10 @@ history_stored = initialize_history_dict()
 mqttc.loop_start()
 mqtt_aws_client.loop_start()
 while True:
-    if mqtt_client.message is not None:
+    if rpi_mqtt_data["message"] is not None:
         # Retrieve topic and payload
-        topic = mqtt_client.message
-        payload = str(mqtt_client.message.payload.decode("utf-8"))
+        topic = rpi_mqtt_data["topic"]
+        payload = str(rpi_mqtt_data["message"].payload.decode("utf-8"))
 
         payload_json = json.loads(payload)
         
@@ -82,5 +83,19 @@ while True:
 
 
         # Reset message
-        mqtt_client.message = None
+        rpi_mqtt_data["message"] = None
+        rpi_mqtt_data["topic"] = None
+
+    if aws_mqtt["message"] is not None:
+        payload = str(aws_mqtt["message"].payload.decode("utf-8"))
+        payload_json = json.loads(payload)
+        aws_mqtt["message"] = None
+        aws_mqtt["topic"] = None
+
+        print(f"Received from Fan Topic in AWS: {payload_json}")
+
+        if payload_json["fan"] == 1:
+            mqttc.publish("turn_fan", json.dumps(payload_json))
+
+
 
