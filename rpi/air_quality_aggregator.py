@@ -2,7 +2,7 @@ import mqtt_client
 import json
 
 # Mosquitto (MQTT) configuration
-ip_mosquitto = "192.168.2.214"
+ip_mosquitto = "192.168.0.27"
 topic_mosquitto = "tester_topic"
 
 # Connect to Mosquitto and subscribe to topics
@@ -23,6 +23,7 @@ aws_mqtt = {"message": None, "topic": None}
 mqtt_aws_client = mqtt_client.connect(mqtt_broker_ip, mqtt_broker_port, ca_cert, cert_file, key_file, aws_mqtt)
 mqtt_aws_client.subscribe("fan_signal")
 ENTRY_LIMIT = 10
+print("MQTT Client connected")
 
 metrics_to_calculate = ["CH4", "CO", "LPG"]
 boolean_metrics = ["AirQuality", "GasDetected"]
@@ -43,7 +44,7 @@ def create_aws_dict (history_stored: dict):
     aws_dict = {}
     for metric in metrics_to_calculate:
         aws_dict[metric] = sum(history_stored[metric])/len(history_stored[metric])
-    
+
     for metric in boolean_metrics:
         aws_dict[metric] = int(all(history_stored[metric]))
     return aws_dict
@@ -54,6 +55,7 @@ history_stored = initialize_history_dict()
 # Keep checking if new data arrived
 mqttc.loop_start()
 mqtt_aws_client.loop_start()
+print("MQTT Loop start")
 while True:
     if rpi_mqtt_data["message"] is not None:
         # Retrieve topic and payload
@@ -61,7 +63,7 @@ while True:
         payload = str(rpi_mqtt_data["message"].payload.decode("utf-8"))
 
         payload_json = json.loads(payload)
-        
+
         print(f"Entries: {history_stored['entries']}")
         print(f"sensor-controller - MQTT subscriber - Message received: {payload}")
         history_stored["entries"] += 1
@@ -70,7 +72,7 @@ while True:
 
         for metric in metrics_to_calculate + boolean_metrics:
             history_stored[metric].append(payload_json[metric])
-        
+
 
         # Only send the data to AWS IoT if we have 20 entries
         if history_stored["entries"] == ENTRY_LIMIT:
@@ -94,8 +96,7 @@ while True:
 
         print(f"Received from Fan Topic in AWS: {payload_json}")
 
-        if payload_json["fan"] == 1:
-            mqttc.publish("turn_fan", json.dumps(payload_json))
-
-
-
+        if payload_json["fan_not_needed"] == 0:
+            mqttc.publish("turn_fan", json.dumps({"fan": 1}))
+        else:
+            mqttc.publish("turn_fan", json.dumps({"fan": 0}))

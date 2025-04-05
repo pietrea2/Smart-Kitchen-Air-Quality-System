@@ -13,7 +13,7 @@
 MQUnifiedsensor MQ9(Board, Voltage_Resolution, ADC_Bit_Resolution, Pin, Type);
 
 
-char *ssid_wifi = "username";
+char *ssid_wifi = "wifi";
 char *pass_wifi = "password";
 
 const int fanPin = D8;
@@ -22,7 +22,7 @@ const int airSensorPinMQ135 = D10;
 const int analogPin = A0;
 
 
-const char *mqtt_broker_ip = "192.168.2.214";
+const char *mqtt_broker_ip = "192.168.0.27";
 const int mqtt_broker_port = 1883;
 const int num_subscribe_topics = 1;
 String subscribe_topics[num_subscribe_topics] = {"turn_fan"};
@@ -96,12 +96,15 @@ void loop() {
   CO      | 599.65 | -2.244
   */
 
+  // Liquefied Petroleum Gas
   MQ9.setA(1000.5); MQ9.setB(-2.186); // Configure the equation to to calculate LPG concentration
   float LPG = MQ9.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
 
+  // Methane
   MQ9.setA(4269.6); MQ9.setB(-2.648); // Configure the equation to to calculate LPG concentration
   float CH4 = MQ9.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
 
+  // Carbon Monoxide
   MQ9.setA(599.65); MQ9.setB(-2.244); // Configure the equation to to calculate LPG concentration
   float CO = MQ9.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
 
@@ -129,11 +132,14 @@ void loop() {
   deserializeJson(msg_doc, msg);
 
   Serial.println(topic);
+  Serial.println(msg);
   if (topic == subscribe_topics[0]) {
-    bool fanSwitch = msg_doc["fan"];
+    int fanSwitch = msg_doc["fan"];
+    Serial.print("Printing fan command:");
+    Serial.println(fanSwitch);
     if (fanSwitch == 1) {
       Serial.println("Fan is on");
-      endFanTime = millis() + 5000;
+      endFanTime = millis() + 10000;
       digitalWrite(fanPin, HIGH); // Turn fan ON
     }
     else{
