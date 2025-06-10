@@ -12,13 +12,20 @@ which connect to a cloud server and upload their air quality readings through an
 will be analyzed and displayed to the user on a computer application where they can read their air quality 
 status from each sensor module. In addition, the system includes fans that are placed within the kitchen 
 and automatically controlled by the system depending on the detection of harmful gases or smoke. For the 
-scope of this project, a prototype was developed to show the feasibility of the produc
+scope of this project, a prototype was developed to show the feasibility of the product.
 
-![Arduino Air QUality Sensor Module](https://github.com/pietrea2/Smart-Kitchen-Air-Quality-System/tree/main/diagrams/arduino_module.png)
+![Arduino Air Quality Sensor Module](https://github.com/pietrea2/Smart-Kitchen-Air-Quality-System/blob/main/diagrams/arduino_module.png)
+
+![Kitchen Layout Diagram](https://github.com/pietrea2/Smart-Kitchen-Air-Quality-System/blob/main/diagrams/kitchen%20diagram.png)
 
 Main System Components:
 - sensors and actuators (gas/smoke sensor, DC fan)
 - communication through edge device/gateway (between Arduino and Raspberry PI)
 - cloud server (AWS) and user dashboard
 
+## System Block Diagram
+![System Block Diagram](https://github.com/pietrea2/Smart-Kitchen-Air-Quality-System/blob/main/diagrams/system_block_diagram.png)
 
+## Code Design Tree:
+- arduino/sensors: includes main code for arduino module
+- rpi: includes code for edge device (Raspberry Pi)
